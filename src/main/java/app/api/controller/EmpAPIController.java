@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.RequestDto.EmpRequest;
+import app.ResponseDto.EmpResponse;
 import app.entity.Dept;
 import app.entity.Emp;
 import app.entity.ExceptionMessage;
@@ -33,36 +34,41 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 public class EmpAPIController {
 
-    private final EmpRepository empRepository;
-    private final DeptRepository deptRepository;
-
-
-    @GetMapping("/emps")
-    ResponseEntity<?> searchAll() {
-        List<Emp> emps = empRepository.findAll();
-        if (emps.isEmpty()) return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(emps, HttpStatus.OK);
-    }
-
-    @GetMapping("/emp/{empno}")
-    ResponseEntity<?> SearchByNo(@PathVariable Integer empno) {
-        Optional<Emp> emp = empRepository.findById(empno);
-        if (!emp.isPresent())
-            return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(emp, HttpStatus.OK);
-    }
-
-    @PostMapping("/emp")
-    public Emp registerEmp(@RequestBody Emp newEmp) {
-        Emp emp = empRepository.save(newEmp);
-        return emp;
-    }
-
-    @PutMapping("/{empno}")
-    public ResponseEntity<EmpDTO> updateEmp(@PathVariable Integer empno, @RequestBody EmpDTO updated) {
+	private final EmpRepository empRepository;
+	private final DeptRepository deptRepository;
+	
+	@GetMapping("/emps")
+	ResponseEntity<?> searchAll(){
+		List<Emp> emps = empRepository.findAll();
+		if(emps.isEmpty()) return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(emps, HttpStatus.OK);
+	}
+  	
+	@GetMapping("/emp/{empno}")
+	ResponseEntity<?> SearchByNo(@PathVariable Integer empno){
+		Optional<Emp> emp = empRepository.findById(empno);
+		if(!emp.isPresent()) return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(emp, HttpStatus.OK);
+	}
+  
+  @PostMapping("/emp")
+	public ResponseEntity<?> registerEmp(@RequestBody EmpRequest newEmp) {
+	  	
+	    Dept dept = deptRepository.getReferenceById(newEmp.getDeptno());
+	    
+	  	Emp emp = new Emp(newEmp.getEmpno(), newEmp.getEname(), newEmp.getJob(), newEmp.getMgr(), newEmp.getHiredate(), newEmp.getSal(), newEmp.getComm(), dept);
+		EmpResponse empResponse = EmpResponse.from(empRepository.save(emp));
+		
+		return new ResponseEntity<>(empResponse, HttpStatus.OK);
+	}
+  
+  @PutMapping("emp/{empno}")
+    public ResponseEntity<EmpResponse> updateEmp(@PathVariable Integer empno, @RequestBody EmpRequest updated) {
 
         Emp emp;
-        ResponseEntity<EmpDTO> response;
+        Dept dept = deptRepository.getReferenceById(updated.getDeptno());
+        
+        ResponseEntity<EmpResponse> response;
 
         if (empRepository.findById(empno).isPresent()) {
             emp = empRepository.findById(empno).get();
@@ -72,12 +78,12 @@ public class EmpAPIController {
             emp.setHiredate(updated.getHiredate());
             emp.setSal(updated.getSal());
             emp.setComm(updated.getComm());
-            Dept dept = deptRepository.findById(updated.getDeptno()).get();
-            emp.setDept(dept);
+            emp.setDept(dept); 
+          
+            EmpResponse empResponse = EmpResponse.from(emp);
 
-            EmpDTO dto = EmpDTO.from(emp);
+            response = ResponseEntity.ok(empResponse);
 
-            response = ResponseEntity.ok(dto);
         } else {
             response = ResponseEntity.notFound().build();
         }
