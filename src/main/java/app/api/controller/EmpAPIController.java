@@ -1,10 +1,15 @@
 package app.api.controller;
 
+import app.dto.EmpDTO;
+import app.entity.Dept;
+import app.entity.Emp;
+import app.repository.DeptRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -28,40 +33,36 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 public class EmpAPIController {
 
-	private final EmpRepository empRepository;
-	private final DeptRepository deptRepository;
-	
-	@GetMapping("/emps")
-	ResponseEntity<?> searchAll(){
-		List<Emp> emps = empRepository.findAll();
-		if(emps.isEmpty()) return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
-		return new ResponseEntity<>(emps, HttpStatus.OK);
-	}
-  	
-	@GetMapping("/emp/{empno}")
-	ResponseEntity<?> SearchByNo(@PathVariable Integer empno){
-		Optional<Emp> emp = empRepository.findById(empno);
-		if(!emp.isPresent()) return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
-		return new ResponseEntity<>(emp, HttpStatus.OK);
-	}
-  
-  @PostMapping("/emp")
-	public Emp registerEmp(@RequestBody EmpRequest newEmp) {
-	  	
-	    Dept dept = deptRepository.getReferenceById(newEmp.getDeptno());
-	  	
-	  	Emp emp = new Emp(newEmp.getEmpno(), newEmp.getEname(), newEmp.getJob(), newEmp.getMgr(), newEmp.getHiredate(), newEmp.getSal(), newEmp.getComm(), dept);
-		emp = empRepository.save(emp);
-		return emp;
-	}
-  
-  @PutMapping("emp/{empno}")
-    public ResponseEntity<Emp> updateEmp(@PathVariable Integer empno, @RequestBody EmpRequest updated) {
+    private final EmpRepository empRepository;
+    private final DeptRepository deptRepository;
+
+
+    @GetMapping("/emps")
+    ResponseEntity<?> searchAll() {
+        List<Emp> emps = empRepository.findAll();
+        if (emps.isEmpty()) return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(emps, HttpStatus.OK);
+    }
+
+    @GetMapping("/emp/{empno}")
+    ResponseEntity<?> SearchByNo(@PathVariable Integer empno) {
+        Optional<Emp> emp = empRepository.findById(empno);
+        if (!emp.isPresent())
+            return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(emp, HttpStatus.OK);
+    }
+
+    @PostMapping("/emp")
+    public Emp registerEmp(@RequestBody Emp newEmp) {
+        Emp emp = empRepository.save(newEmp);
+        return emp;
+    }
+
+    @PutMapping("/{empno}")
+    public ResponseEntity<EmpDTO> updateEmp(@PathVariable Integer empno, @RequestBody EmpDTO updated) {
 
         Emp emp;
-        Dept dept = deptRepository.getReferenceById(updated.getDeptno());
-        
-        ResponseEntity<Emp> response;
+        ResponseEntity<EmpDTO> response;
 
         if (empRepository.findById(empno).isPresent()) {
             emp = empRepository.findById(empno).get();
@@ -71,23 +72,26 @@ public class EmpAPIController {
             emp.setHiredate(updated.getHiredate());
             emp.setSal(updated.getSal());
             emp.setComm(updated.getComm());
-            emp.setDept(dept); //
+            Dept dept = deptRepository.findById(updated.getDeptno()).get();
+            emp.setDept(dept);
 
-            response = ResponseEntity.ok(emp);
+            EmpDTO dto = EmpDTO.from(emp);
+
+            response = ResponseEntity.ok(dto);
         } else {
             response = ResponseEntity.notFound().build();
         }
-     return response;
-  }
-  
-  @DeleteMapping("/emp/{empno}")
-	public Emp deleteEmpByEmpno(@PathVariable Integer empno) {
-	    Emp emp = empRepository.findById(empno)
-	            .orElseThrow(() -> new IllegalArgumentException("사원정보가 존재하지 않습니다 : " + empno));
-	    
-	    empRepository.deleteById(empno);
+        return response;
+    }
 
-	    return emp;
-	}
+    @DeleteMapping("/emp/{empno}")
+    public Emp deleteEmpByEmpno(@PathVariable Integer empno) {
+        Emp emp = empRepository.findById(empno)
+                .orElseThrow(() -> new IllegalArgumentException("사원정보가 존재하지 않습니다 : " + empno));
+
+        empRepository.deleteById(empno);
+
+        return emp;
+    }
 
 }
