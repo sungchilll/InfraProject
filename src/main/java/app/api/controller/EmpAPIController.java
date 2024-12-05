@@ -1,5 +1,6 @@
 package app.api.controller;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
@@ -43,5 +44,16 @@ public class EmpAPIController {
 		Emp emp = empRepository.save(newEmp);
 		return emp;
 	}
-}
+  
+  
+  @DeleteMapping("/emp/{empno}")
+	public Emp deleteEmpByEmpno(@PathVariable Integer empno) {
+	    Emp emp = empRepository.findById(empno)
+	            .orElseThrow(() -> new IllegalArgumentException("사원정보가 존재하지 않습니다 : " + empno));
+	    
+	    empRepository.deleteById(empno);
 
+	    return emp;
+	}
+  
+}
