@@ -1,6 +1,9 @@
 package app.api.controller;
 
+import app.dto.EmpDTO;
+import app.entity.Dept;
 import app.entity.Emp;
+import app.repository.DeptRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,12 +17,13 @@ import lombok.RequiredArgsConstructor;
 public class EmpAPIController {
 
     private final EmpRepository empRepository;
+    private final DeptRepository deptRepository;
 
     @PutMapping("/{empno}")
-    public ResponseEntity<Emp> updateEmp(@PathVariable Integer empno, @RequestBody Emp updated) {
+    public ResponseEntity<EmpDTO> updateEmp(@PathVariable Integer empno, @RequestBody EmpDTO updated) {
 
         Emp emp;
-        ResponseEntity<Emp> response;
+        ResponseEntity<EmpDTO> response;
 
         if (empRepository.findById(empno).isPresent()) {
             emp = empRepository.findById(empno).get();
@@ -29,9 +33,13 @@ public class EmpAPIController {
             emp.setHiredate(updated.getHiredate());
             emp.setSal(updated.getSal());
             emp.setComm(updated.getComm());
-            emp.setDept(updated.getDept()); //
 
-            response = ResponseEntity.ok(emp);
+            Dept dept = deptRepository.findById(updated.getDeptno()).get();
+            emp.setDept(dept);
+
+            EmpDTO dto = EmpDTO.from(emp);
+
+            response = ResponseEntity.ok(dto);
         } else {
             response = ResponseEntity.notFound().build();
         }
