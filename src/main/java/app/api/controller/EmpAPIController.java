@@ -20,8 +20,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import app.RequestDto.EmpRequest;
+import app.entity.Dept;
 import app.entity.Emp;
 import app.entity.ExceptionMessage;
+import app.repository.DeptRepository;
 import app.repository.EmpRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -69,7 +72,6 @@ public class EmpAPIController {
             emp.setHiredate(updated.getHiredate());
             emp.setSal(updated.getSal());
             emp.setComm(updated.getComm());
-
             Dept dept = deptRepository.findById(updated.getDeptno()).get();
             emp.setDept(dept);
 
