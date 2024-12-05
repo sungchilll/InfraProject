@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import app.RequestDto.EmpRequest;
+import app.entity.Dept;
 import app.entity.Emp;
 import app.entity.ExceptionMessage;
+import app.repository.DeptRepository;
 import app.repository.EmpRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class EmpAPIController {
 
 	private final EmpRepository empRepository;
+	private final DeptRepository deptRepository;
 	
 	@GetMapping("/emps")
 	ResponseEntity<?> searchAll(){
@@ -42,15 +46,21 @@ public class EmpAPIController {
 	}
   
   @PostMapping("/emp")
-	public Emp registerEmp(@RequestBody Emp newEmp) {
-		Emp emp = empRepository.save(newEmp);
+	public Emp registerEmp(@RequestBody EmpRequest newEmp) {
+	  	
+	    Dept dept = deptRepository.getReferenceById(newEmp.getDeptno());
+	  	
+	  	Emp emp = new Emp(newEmp.getEmpno(), newEmp.getEname(), newEmp.getJob(), newEmp.getMgr(), newEmp.getHiredate(), newEmp.getSal(), newEmp.getComm(), dept);
+		emp = empRepository.save(emp);
 		return emp;
 	}
   
   @PutMapping("emp/{empno}")
-    public ResponseEntity<Emp> updateEmp(@PathVariable Integer empno, @RequestBody Emp updated) {
+    public ResponseEntity<Emp> updateEmp(@PathVariable Integer empno, @RequestBody EmpRequest updated) {
 
         Emp emp;
+        Dept dept = deptRepository.getReferenceById(updated.getDeptno());
+        
         ResponseEntity<Emp> response;
 
         if (empRepository.findById(empno).isPresent()) {
@@ -61,7 +71,7 @@ public class EmpAPIController {
             emp.setHiredate(updated.getHiredate());
             emp.setSal(updated.getSal());
             emp.setComm(updated.getComm());
-            emp.setDept(updated.getDept()); //
+            emp.setDept(dept); //
 
             response = ResponseEntity.ok(emp);
         } else {
