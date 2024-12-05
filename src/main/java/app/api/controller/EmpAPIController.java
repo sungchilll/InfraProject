@@ -1,5 +1,7 @@
 package app.api.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,6 +47,28 @@ public class EmpAPIController {
 		return emp;
 	}
   
+  @PutMapping("emp/{empno}")
+    public ResponseEntity<Emp> updateEmp(@PathVariable Integer empno, @RequestBody Emp updated) {
+
+        Emp emp;
+        ResponseEntity<Emp> response;
+
+        if (empRepository.findById(empno).isPresent()) {
+            emp = empRepository.findById(empno).get();
+            emp.setEname(updated.getEname());
+            emp.setJob(updated.getJob());
+            emp.setMgr(updated.getMgr());
+            emp.setHiredate(updated.getHiredate());
+            emp.setSal(updated.getSal());
+            emp.setComm(updated.getComm());
+            emp.setDept(updated.getDept()); //
+
+            response = ResponseEntity.ok(emp);
+        } else {
+            response = ResponseEntity.notFound().build();
+        }
+     return response;
+  }
   
   @DeleteMapping("/emp/{empno}")
 	public Emp deleteEmpByEmpno(@PathVariable Integer empno) {
@@ -55,5 +79,5 @@ public class EmpAPIController {
 
 	    return emp;
 	}
-  
+
 }
