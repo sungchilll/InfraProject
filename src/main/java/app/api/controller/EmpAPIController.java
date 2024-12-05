@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.RequestDto.EmpRequest;
+import app.ResponseDto.EmpResponse;
 import app.entity.Dept;
 import app.entity.Emp;
 import app.entity.ExceptionMessage;
@@ -46,22 +47,23 @@ public class EmpAPIController {
 	}
   
   @PostMapping("/emp")
-	public Emp registerEmp(@RequestBody EmpRequest newEmp) {
+	public ResponseEntity<?> registerEmp(@RequestBody EmpRequest newEmp) {
 	  	
 	    Dept dept = deptRepository.getReferenceById(newEmp.getDeptno());
-	  	
+	    
 	  	Emp emp = new Emp(newEmp.getEmpno(), newEmp.getEname(), newEmp.getJob(), newEmp.getMgr(), newEmp.getHiredate(), newEmp.getSal(), newEmp.getComm(), dept);
-		emp = empRepository.save(emp);
-		return emp;
+		EmpResponse empResponse = EmpResponse.from(empRepository.save(emp));
+		
+		return new ResponseEntity<>(empResponse, HttpStatus.OK);
 	}
   
   @PutMapping("emp/{empno}")
-    public ResponseEntity<Emp> updateEmp(@PathVariable Integer empno, @RequestBody EmpRequest updated) {
+    public ResponseEntity<EmpResponse> updateEmp(@PathVariable Integer empno, @RequestBody EmpRequest updated) {
 
         Emp emp;
         Dept dept = deptRepository.getReferenceById(updated.getDeptno());
         
-        ResponseEntity<Emp> response;
+        ResponseEntity<EmpResponse> response;
 
         if (empRepository.findById(empno).isPresent()) {
             emp = empRepository.findById(empno).get();
@@ -71,9 +73,11 @@ public class EmpAPIController {
             emp.setHiredate(updated.getHiredate());
             emp.setSal(updated.getSal());
             emp.setComm(updated.getComm());
-            emp.setDept(dept); //
+            emp.setDept(dept); 
+            
+            EmpResponse empResponse = EmpResponse.from(emp);
 
-            response = ResponseEntity.ok(emp);
+            response = ResponseEntity.ok(empResponse);
         } else {
             response = ResponseEntity.notFound().build();
         }
