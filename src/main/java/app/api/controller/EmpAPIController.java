@@ -17,22 +17,23 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/emps")
+@RequestMapping("/api")
 public class EmpAPIController {
 
 	private final EmpRepository empRepository;
 	
-	@GetMapping
+	@GetMapping("/emps")
 	ResponseEntity<?> searchAll(){
 		List<Emp> emps = empRepository.findAll();
 		if(emps.isEmpty()) return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
 		return new ResponseEntity<>(emps, HttpStatus.OK);
 	}
 	
-	@GetMapping("/{empno}")
+	@GetMapping("/emp/{empno}")
 	ResponseEntity<?> SearchByNo(@PathVariable Integer empno){
 		Optional<Emp> emp = empRepository.findById(empno);
 		if(!emp.isPresent()) return new ResponseEntity<>(new ExceptionMessage("사원정보가 존재하지 않습니다"), HttpStatus.NOT_FOUND);
 		return new ResponseEntity<>(emp, HttpStatus.OK);
 	}
 }
+
